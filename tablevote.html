@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TableVote – Group Restaurant Decision App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Playfair Display', 'Georgia', 'serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --primary: hsl(16, 85%, 58%);
+      --primary-light: hsl(16, 70%, 95%);
+      --primary-fg: #fff;
+      --background: hsl(0, 0%, 98%);
+      --foreground: hsl(240, 10%, 10%);
+      --border: hsl(240, 6%, 90%);
+      --card: hsl(0, 0%, 100%);
+      --card-fg: hsl(240, 10%, 10%);
+      --muted: hsl(240, 5%, 96%);
+      --muted-fg: hsl(240, 5%, 45%);
+      --secondary: hsl(240, 5%, 94%);
+      --secondary-fg: hsl(240, 10%, 25%);
+      --accent: hsl(16, 70%, 95%);
+      --accent-fg: hsl(16, 85%, 40%);
+      --destructive: hsl(0, 84%, 60%);
+    }
+    body { background: var(--background); color: var(--foreground); font-family: 'Inter', sans-serif; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .gradient-text {
+      background: linear-gradient(to right, hsl(16,85%,58%), hsl(25,85%,55%), hsl(45,93%,45%));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: var(--primary-fg);
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 1.25rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: opacity 0.15s;
+      font-size: 0.875rem;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-outline {
+      background: transparent;
+      color: var(--foreground);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.5rem 1.25rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background 0.15s;
+      font-size: 0.875rem;
+    }
+    .btn-outline:hover { background: var(--muted); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--foreground);
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background 0.15s;
+      font-size: 0.875rem;
+    }
+    .btn-ghost:hover { background: var(--muted); }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      gap: 0.25rem;
+    }
+    .badge-default { background: var(--primary); color: var(--primary-fg); }
+    .badge-outline { border: 1px solid var(--border); color: var(--foreground); }
+    .badge-secondary { background: var(--secondary); color: var(--secondary-fg); }
+    .progress-bar { background: var(--muted); border-radius: 999px; height: 8px; overflow: hidden; }
+    .progress-fill { background: var(--primary); height: 100%; border-radius: 999px; transition: width 0.5s ease; }
+    .nav { background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
+    .logo-icon { height: 36px; width: 36px; border-radius: 6px; background: var(--primary); display: flex; align-items: center; justify-content: center; }
+    .logo-icon-sm { height: 32px; width: 32px; border-radius: 6px; background: var(--primary); display: flex; align-items: center; justify-content: center; }
+    .input {
+      width: 100%; border: 1px solid var(--border); border-radius: 6px;
+      padding: 0.5rem 0.75rem; font-size: 0.875rem; outline: none;
+      background: white; color: var(--foreground);
+      transition: border-color 0.15s;
+    }
+    .input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px hsla(16,85%,58%,0.15); }
+    .cuisine-badge {
+      cursor: pointer; border: 1px solid var(--border); border-radius: 999px;
+      padding: 0.4rem 1rem; font-size: 0.875rem; font-weight: 500;
+      transition: all 0.15s; user-select: none;
+    }
+    .cuisine-badge:hover { background: var(--muted); }
+    .cuisine-badge.selected { background: var(--primary); color: white; border-color: var(--primary); }
+    .price-card { border: 1px solid var(--border); border-radius: 9px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.15s; }
+    .price-card:hover { background: var(--muted); }
+    .price-card.selected { box-shadow: 0 0 0 2px var(--primary); background: hsla(16,85%,58%,0.05); }
+    .restaurant-card { border: 1px solid var(--border); border-radius: 9px; overflow: hidden; transition: box-shadow 0.15s; cursor: pointer; background: white; }
+    .restaurant-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .restaurant-card.top-pick { box-shadow: 0 0 0 2px var(--primary); }
+    .spinner { border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; width: 32px; height: 32px; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .vote-card { border: 1px solid var(--border); border-radius: 9px; overflow: hidden; background: white; cursor: pointer; transition: all 0.15s; }
+    .vote-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .vote-card.selected { box-shadow: 0 0 0 2px var(--primary); }
+    .nav-demo-bar {
+      background: hsl(16,70%,95%); border-bottom: 1px solid hsl(16,50%,85%);
+      padding: 0.5rem 1rem; font-size: 0.8rem; color: hsl(16,85%,35%);
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: center;
+    }
+    .nav-demo-btn { cursor: pointer; font-weight: 500; text-decoration: underline; }
+    .nav-demo-btn:hover { color: var(--primary); }
+    .nav-demo-btn.current { color: var(--primary); text-decoration: none; font-weight: 700; }
+    .food-spinner-ring {
+      width: 160px; height: 160px; border-radius: 50%; border: 2px dashed hsl(16,50%,75%);
+      position: relative; margin: 0 auto;
+      animation: spin 8s linear infinite;
+    }
+    .food-icon { position: absolute; font-size: 1.5rem; }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+    .animate-pulse { animation: pulse 2s ease-in-out infinite; }
+    .ring-winner { box-shadow: 0 0 0 4px var(--primary), 0 4px 16px rgba(0,0,0,0.12) !important; }
+    label { font-size: 0.875rem; font-weight: 500; color: var(--foreground); display: block; margin-bottom: 0.4rem; }
+    .slider { width: 100%; accent-color: var(--primary); }
+    .step-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+    .step-dot.active { background: var(--primary); }
+    .step-dot.done { background: hsl(16,60%,75%); }
+    .confetti { font-size: 2.5rem; animation: pulse 1.5s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+
+<!-- Demo Navigation Bar -->
+<div class="nav-demo-bar">
+  <span style="font-weight:600;">TableVote Preview:</span>
+  <span class="nav-demo-btn current" id="nav-landing" onclick="goTo('landing')">Landing</span>
+  <span class="nav-demo-btn" id="nav-home" onclick="goTo('home')">Home</span>
+  <span class="nav-demo-btn" id="nav-preferences" onclick="goTo('preferences')">Preferences</span>
+  <span class="nav-demo-btn" id="nav-waiting" onclick="goTo('waiting')">Waiting Room</span>
+  <span class="nav-demo-btn" id="nav-results" onclick="goTo('results')">Results</span>
+  <span class="nav-demo-btn" id="nav-vote" onclick="goTo('vote')">Vote</span>
+  <span class="nav-demo-btn" id="nav-randomizer" onclick="goTo('randomizer')">Randomizer</span>
+  <span class="nav-demo-btn" id="nav-decision" onclick="goTo('decision')">Decision</span>
+</div>
+
+<!-- ===================== LANDING PAGE ===================== -->
+<div class="page active" id="page-landing">
+  <nav class="nav">
+    <div style="max-width:1280px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:64px;">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div class="logo-icon">
+          <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+        </div>
+        <span style="font-size:1.2rem;font-weight:700;">TableVote</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <a style="font-size:0.875rem;color:var(--muted-fg);cursor:pointer;">Features</a>
+        <a style="font-size:0.875rem;color:var(--muted-fg);cursor:pointer;">How It Works</a>
+      </div>
+      <button class="btn-primary" onclick="goTo('home')">Get Started</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section style="padding:8rem 1.5rem 5rem;">
+    <div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;">
+      <div>
+        <div style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;border-radius:999px;background:var(--accent);color:var(--accent-fg);font-size:0.875rem;font-weight:500;margin-bottom:1.5rem;">
+          ✨ No more endless "where do you want to eat?" debates
+        </div>
+        <h1 style="font-family:'Playfair Display',serif;font-size:3.5rem;font-weight:700;line-height:1.15;margin-bottom:1.25rem;">
+          Group Dining Decisions,<br><span class="gradient-text">Simplified</span>
+        </h1>
+        <p style="font-size:1.1rem;color:var(--muted-fg);max-width:480px;margin-bottom:2rem;line-height:1.7;">
+          TableVote combines everyone's food preferences, dietary needs, and location to find the perfect restaurant that makes your whole group happy.
+        </p>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+          <button class="btn-primary" style="font-size:1rem;padding:0.75rem 1.75rem;" onclick="goTo('home')">
+            Start a Group <span>→</span>
+          </button>
+          <button class="btn-outline" style="font-size:1rem;padding:0.75rem 1.75rem;" onclick="goTo('home')">
+            Join with Code
+          </button>
+        </div>
+        <div style="display:flex;gap:1.5rem;font-size:0.875rem;color:var(--muted-fg);">
+          <span style="display:flex;align-items:center;gap:0.4rem;"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;"></span> Free forever</span>
+          <span style="display:flex;align-items:center;gap:0.4rem;"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;"></span> No credit card required</span>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="padding:1.5rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <h3 style="font-weight:600;font-size:1.1rem;">Top Matches for Your Group</h3>
+            <span style="color:var(--primary);font-size:0.875rem;font-weight:500;display:flex;align-items:center;gap:0.25rem;">⭐ Best Fit</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.75rem;">
+            <div class="restaurant-card top-pick" style="position:relative;">
+              <div style="display:flex;align-items:center;gap:1rem;padding:1rem;">
+                <div style="width:48px;height:48px;border-radius:6px;background:linear-gradient(135deg,hsla(16,85%,58%,0.2),hsla(25,85%,55%,0.2));display:flex;align-items:center;justify-content:center;">🍝</div>
+                <div style="flex:1;">
+                  <p style="font-weight:500;">Bella Italia</p>
+                  <p style="font-size:0.8rem;color:var(--muted-fg);">Italian • $$</p>
+                </div>
+                <div style="text-align:right;">
+                  <p style="font-size:0.875rem;font-weight:500;">⭐ 4.8</p>
+                  <p style="font-size:0.75rem;color:var(--muted-fg);">0.8 mi</p>
+                </div>
+              </div>
+            </div>
+            <div class="restaurant-card top-pick">
+              <div style="display:flex;align-items:center;gap:1rem;padding:1rem;">
+                <div style="width:48px;height:48px;border-radius:6px;background:linear-gradient(135deg,hsla(16,85%,58%,0.2),hsla(25,85%,55%,0.2));display:flex;align-items:center;justify-content:center;">🍣</div>
+                <div style="flex:1;">
+                  <p style="font-weight:500;">Sakura Sushi</p>
+                  <p style="font-size:0.8rem;color:var(--muted-fg);">Japanese • $$$</p>
+                </div>
+                <div style="text-align:right;">
+                  <p style="font-size:0.875rem;font-weight:500;">⭐ 4.6</p>
+                  <p style="font-size:0.75rem;color:var(--muted-fg);">1.2 mi</p>
+                </div>
+              </div>
+            </div>
+            <div class="restaurant-card">
+              <div style="display:flex;align-items:center;gap:1rem;padding:1rem;">
+                <div style="width:48px;height:48px;border-radius:6px;background:linear-gradient(135deg,hsla(16,85%,58%,0.2),hsla(25,85%,55%,0.2));display:flex;align-items:center;justify-content:center;">🌮</div>
+                <div style="flex:1;">
+                  <p style="font-weight:500;">Taco Haven</p>
+                  <p style="font-size:0.8rem;color:var(--muted-fg);">Mexican • $</p>
+                </div>
+                <div style="text-align:right;">
+                  <p style="font-size:0.875rem;font-weight:500;">⭐ 4.5</p>
+                  <p style="font-size:0.75rem;color:var(--muted-fg);">0.5 mi</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" style="padding:5rem 1.5rem;background:var(--muted);">
+    <div style="max-width:1280px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:3rem;">
+        <h2 style="font-family:'Playfair Display',serif;font-size:2.25rem;font-weight:700;margin-bottom:1rem;">Everything You Need to Decide</h2>
+        <p style="color:var(--muted-fg);font-size:1.05rem;max-width:500px;margin:0 auto;">From preferences to final pick, TableVote makes group dining decisions quick and fun.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;">
+        <div class="card" style="padding:1.5rem;">
+          <div style="width:48px;height:48px;border-radius:8px;background:hsla(16,85%,58%,0.1);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:1rem;">👥</div>
+          <h3 style="font-weight:600;font-size:1.05rem;margin-bottom:0.5rem;">Group Preferences</h3>
+          <p style="font-size:0.875rem;color:var(--muted-fg);">Collect everyone's cuisine tastes, dietary needs, and distance limits in one place.</p>
+        </div>
+        <div class="card" style="padding:1.5rem;">
+          <div style="width:48px;height:48px;border-radius:8px;background:hsla(16,85%,58%,0.1);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:1rem;">📍</div>
+          <h3 style="font-weight:600;font-size:1.05rem;margin-bottom:0.5rem;">Smart Matching</h3>
+          <p style="font-size:0.875rem;color:var(--muted-fg);">Our algorithm finds restaurants that work for everyone, ranked by best fit.</p>
+        </div>
+        <div class="card" style="padding:1.5rem;">
+          <div style="width:48px;height:48px;border-radius:8px;background:hsla(16,85%,58%,0.1);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:1rem;">🗳️</div>
+          <h3 style="font-weight:600;font-size:1.05rem;margin-bottom:0.5rem;">Vote Together</h3>
+          <p style="font-size:0.875rem;color:var(--muted-fg);">Let the group vote on favorites when you want everyone's input.</p>
+        </div>
+        <div class="card" style="padding:1.5rem;">
+          <div style="width:48px;height:48px;border-radius:8px;background:hsla(16,85%,58%,0.1);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:1rem;">🔀</div>
+          <h3 style="font-weight:600;font-size:1.05rem;margin-bottom:0.5rem;">Random Pick</h3>
+          <p style="font-size:0.875rem;color:var(--muted-fg);">Can't decide? Let fate choose with our fun randomizer spinner.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it Works -->
+  <section id="how-it-works" style="padding:5rem 1.5rem;">
+    <div style="max-width:1280px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:3rem;">
+        <h2 style="font-family:'Playfair Display',serif;font-size:2.25rem;font-weight:700;margin-bottom:1rem;">How It Works</h2>
+        <p style="color:var(--muted-fg);font-size:1.05rem;max-width:500px;margin:0 auto;">Three simple steps to end the "where should we eat?" debate forever.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;">
+        <div style="position:relative;padding-top:3rem;">
+          <div style="font-size:5rem;font-weight:700;color:hsla(16,85%,58%,0.12);position:absolute;top:0;left:-8px;line-height:1;">01</div>
+          <h3 style="font-size:1.2rem;font-weight:600;margin-bottom:0.75rem;">Create a Group</h3>
+          <p style="color:var(--muted-fg);line-height:1.7;">Start a new session and share the unique code with your friends or family.</p>
+        </div>
+        <div style="position:relative;padding-top:3rem;">
+          <div style="font-size:5rem;font-weight:700;color:hsla(16,85%,58%,0.12);position:absolute;top:0;left:-8px;line-height:1;">02</div>
+          <h3 style="font-size:1.2rem;font-weight:600;margin-bottom:0.75rem;">Enter Preferences</h3>
+          <p style="color:var(--muted-fg);line-height:1.7;">Everyone fills out their cuisine preferences, dietary restrictions, and how far they're willing to travel.</p>
+        </div>
+        <div style="position:relative;padding-top:3rem;">
+          <div style="font-size:5rem;font-weight:700;color:hsla(16,85%,58%,0.12);position:absolute;top:0;left:-8px;line-height:1;">03</div>
+          <h3 style="font-size:1.2rem;font-weight:600;margin-bottom:0.75rem;">Get Results</h3>
+          <p style="color:var(--muted-fg);line-height:1.7;">See ranked restaurant recommendations, vote on favorites, or spin the wheel to decide!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section style="padding:5rem 1.5rem;">
+    <div style="max-width:640px;margin:0 auto;">
+      <div class="card" style="padding:4rem;text-align:center;background:linear-gradient(135deg,hsla(16,85%,58%,0.05),hsla(25,85%,55%,0.05),hsla(45,93%,55%,0.05));">
+        <h2 style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;margin-bottom:1rem;">Ready to End the Debate?</h2>
+        <p style="color:var(--muted-fg);margin-bottom:1.75rem;line-height:1.7;">Join thousands of groups who've discovered the easiest way to pick a restaurant together.</p>
+        <button class="btn-primary" style="font-size:1rem;padding:0.75rem 2rem;" onclick="goTo('home')">Get Started Free →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="border-top:1px solid var(--border);padding:2rem 1.5rem;">
+    <div style="max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div class="logo-icon" style="width:28px;height:28px;">
+          <svg width="14" height="14" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+        </div>
+        <span style="font-weight:600;">TableVote</span>
+      </div>
+      <p style="font-size:0.875rem;color:var(--muted-fg);">© 2026 TableVote. All rights reserved.</p>
+    </div>
+  </footer>
+</div>
+
+<!-- ===================== HOME PAGE ===================== -->
+<div class="page" id="page-home">
+  <nav class="nav">
+    <div style="max-width:1280px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:64px;">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div class="logo-icon"><svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
+        <span style="font-size:1.2rem;font-weight:700;">TableVote</span>
+      </div>
+      <button class="btn-ghost" style="gap:0.5rem;">
+        <span style="width:32px;height:32px;border-radius:50%;background:hsla(16,85%,58%,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--primary);">MJ</span>
+        <span style="font-size:0.875rem;font-weight:500;">Madeline</span>
+        <span>▾</span>
+      </button>
+    </div>
+  </nav>
+  <main style="max-width:1280px;margin:0 auto;padding:2rem 1.5rem;">
+    <div style="margin-bottom:2rem;">
+      <h1 style="font-family:'Playfair Display',serif;font-size:1.875rem;font-weight:700;margin-bottom:0.4rem;">Welcome back, Madeline!</h1>
+      <p style="color:var(--muted-fg);">Start a new group decision or join an existing one.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:3rem;">
+      <div class="card" style="padding:1.5rem;">
+        <div style="margin-bottom:1rem;">
+          <h3 style="font-size:1rem;font-weight:600;display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;"><span style="color:var(--primary);">+</span> Start New Group</h3>
+          <p style="font-size:0.875rem;color:var(--muted-fg);">Create a new group and invite friends to share their preferences.</p>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label>Group Name</label>
+          <input class="input" id="group-name-input" placeholder="e.g., Friday Night Dinner" />
+        </div>
+        <button class="btn-primary" style="width:100%;justify-content:center;" onclick="goTo('preferences')">Create Group →</button>
+      </div>
+      <div class="card" style="padding:1.5rem;">
+        <div style="margin-bottom:1rem;">
+          <h3 style="font-size:1rem;font-weight:600;display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;"><span style="color:var(--primary);">👥</span> Join Existing Group</h3>
+          <p style="font-size:0.875rem;color:var(--muted-fg);">Enter the 6-character code shared by your friend.</p>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label>Group Code</label>
+          <input class="input" placeholder="ABC123" style="font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.15em;" maxlength="6" />
+        </div>
+        <button class="btn-outline" style="width:100%;justify-content:center;" onclick="goTo('preferences')">Join Group →</button>
+      </div>
+    </div>
+    <div>
+      <h2 style="font-size:1.15rem;font-weight:600;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;"><span style="color:var(--muted-fg);">🕐</span> Recent Groups</h2>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+        <div class="card" style="padding:1rem;cursor:pointer;" onclick="goTo('results')">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+            <p style="font-weight:500;">Friday Night Dinner</p>
+            <span class="badge badge-secondary">results</span>
+          </div>
+          <div style="display:flex;gap:1rem;font-size:0.8rem;color:var(--muted-fg);">
+            <span style="font-family:'JetBrains Mono',monospace;">#XK8P2Q</span>
+            <span>Mar 28, 2026</span>
+          </div>
+        </div>
+        <div class="card" style="padding:1rem;cursor:pointer;" onclick="goTo('preferences')">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+            <p style="font-weight:500;">Team Lunch</p>
+            <span class="badge badge-secondary">collecting</span>
+          </div>
+          <div style="display:flex;gap:1rem;font-size:0.8rem;color:var(--muted-fg);">
+            <span style="font-family:'JetBrains Mono',monospace;">#LM4RT9</span>
+            <span>Apr 1, 2026</span>
+          </div>
+        </div>
+        <div class="card" style="padding:1rem;cursor:pointer;" onclick="goTo('decision')">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+            <p style="font-weight:500;">Birthday Dinner</p>
+            <span class="badge badge-secondary">decided</span>
+          </div>
+          <div style="display:flex;gap:1rem;font-size:0.8rem;color:var(--muted-fg);">
+            <span style="font-family:'JetBrains Mono',monospace;">#BZ7WN1</span>
+            <span>Mar 15, 2026</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== PREFERENCES PAGE ===================== -->
+<div class="page" id="page-preferences">
+  <nav class="nav">
+    <div style="max-width:896px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:64px;">
+      <button class="btn-ghost" onclick="goTo('home')">← Back</button>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div class="logo-icon-sm"><svg width="16" height="16" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
+        <span style="font-weight:600;">Friday Night Dinner</span>
+      </div>
+      <div></div>
+    </div>
+  </nav>
+  <main style="max-width:896px;margin:0 auto;padding:2rem 1.5rem;" id="pref-main">
+    <div style="margin-bottom:2rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h1 style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;">Friday Night Dinner</h1>
+          <p style="color:var(--muted-fg);">Share your food preferences</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <span style="font-size:0.875rem;color:var(--muted-fg);">👥 3 members</span>
+          <button class="btn-outline" style="font-family:'JetBrains Mono',monospace;"># XK8P2Q</button>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:0.875rem;margin-bottom:0.4rem;">
+          <span style="color:var(--muted-fg);" id="pref-step-label">Step 1 of 5</span>
+          <span style="font-weight:500;" id="pref-step-title">Cuisine Preferences</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="pref-progress" style="width:20%;"></div></div>
+      </div>
+    </div>
+    <!-- Step panels -->
+    <div id="pref-step-0" class="card" style="padding:1.5rem;margin-bottom:1.5rem;">
+      <h3 style="font-size:1rem;font-weight:600;margin-bottom:0.25rem;display:flex;align-items:center;gap:0.5rem;"><span style="color:var(--primary);">🍽</span> Cuisine Preferences</h3>
+      <p style="font-size:0.875rem;color:var(--muted-fg);margin-bottom:1rem;">What types of food are you in the mood for?</p>
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+        <span class="cuisine-badge selected" onclick="toggleCuisine(this)">✓ Italian</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Mexican</span>
+        <span class="cuisine-badge selected" onclick="toggleCuisine(this)">✓ Japanese</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Chinese</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Indian</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Thai</span>
+        <span class="cuisine-badge selected" onclick="toggleCuisine(this)">✓ American</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Mediterranean</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">French</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Korean</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Vietnamese</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Greek</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Middle Eastern</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Caribbean</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Ethiopian</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Spanish</span>
+      </div>
+    </div>
+    <div id="pref-step-1" class="card" style="padding:1.5rem;margin-bottom:1.5rem;display:none;">
+      <h3 style="font-size:1rem;font-weight:600;margin-bottom:0.25rem;display:flex;align-items:center;gap:0.5rem;"><span style="color:var(--primary);">🍽</span> Dietary Restrictions</h3>
+      <p style="font-size:0.875rem;color:var(--muted-fg);margin-bottom:0.5rem;">Any dietary needs we should know about?</p>
+      <p style="font-size:0.8rem;color:var(--muted-fg);margin-bottom:1rem;">Select any that apply (optional)</p>
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Vegetarian</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Vegan</span>
+        <span class="cuisine-badge selected" onclick="toggleCuisine(this)">✓ Gluten-Free</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Halal</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Kosher</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Dairy-Free</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Nut-Free</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Pescatarian</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Keto</span>
+        <span class="cuisine-badge" onclick="toggleCuisine(this)">Paleo</span>
+      </div>
+    </div>
+    <div id="pref-step-2" class="card" style="padding:1.5rem;margin-bottom:1.5rem;display:none;">
+      <h3 style="font-size:1rem;font-weight:600;margin-bottom:0.25rem;display:flex;align-items:center;gap:0.5rem;"><span style="color:var(--primary);">📍</span> Distance & Location</h3>
+      <p style="font-size:0.875rem;color:var(--muted-fg);margin-bottom:1.25rem;">How far are you willing to travel?</p>
+      <label>Your Location</label>
+      <p style="font-size:0.875rem;color:var(--muted-fg);margin-bottom:0.75rem;">Share your location so we can find restaurants convenient for everyone in the group.</p>
+      <button class="btn-primary" style="width:100%;justify-content:center;margin-bottom:1.5rem;">📍 Share My Location</button>
+      <div style="border-top:1px solid var(--border);padding-top:1.25rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+          <label style="margin:0;">Maximum Distance</label>
+          <span style="font-size:1.1rem;font-weight:600;color:var(--primary);">10 miles</span>
+        </div>
+        <input type="range" class="slider" min="1" max="25" value="10" oninput="this.previousElementSibling.querySelector('span').textContent = this.value + ' miles'" />
+        <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--muted-fg);margin-top:0.25rem;"><span>1 mile</span><span>25 miles</span></div>
+      </div>
+    </div>
+    <div id="pref-step-3" class="card" style="padding:1.5rem;margin-bottom:1.5rem;display:none;">
+      <h3 style="font-size:1rem;font-weight:600;margin-bottom:0.25rem;display:flex;align-items:center;gap:0.5rem;"><span style="color:var(--primary);">💵</span> Price Range</h3>
+      <p style="font-size:0.875rem;color:var(--muted-fg);margin-bottom:1rem;">What's your budget for this meal?</p>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;">
+        <div class="price-card" onclick="togglePrice(this)"><div style="font-size:1.5rem;font-weight:700;color:var(--primary);">$</div><div style="font-size:0.75rem;color:var(--muted-fg);">Under $15</div></div>
+        <div class="price-card selected" onclick="togglePrice(this)"><div style="font-size:1.5rem;font-weight:700;color:var(--primary);">$$</div><div style="font-size:0.75rem;color:var(--muted-fg);">$15–30</div></div>
+        <div class="price-card selected" onclick="togglePrice(this)"><div style="font-size:1.5rem;font-weight:700;color:var(--primary);">$$$</div><div style="font-size:0.75rem;color:var(--muted-fg);">$30–60</div></div>
+        <div class="price-card" onclick="togglePrice(this)"><div style="font-size:1.5rem;font-weight:700;color:var(--primary);">$$$$</div><div style="font-size:0.75rem;color:var(--muted-fg);">$60+</div></div>
+      </div>
+    </div>
+    <div id="pref-step-4" class="card" style="padding:1.5rem;margin-bottom:1.5rem;display:none;">
+      <h3 style="font-size:1rem;font-weight:600;margin-bottom:0.25rem;display:flex;align-items:center;gap:0.5rem;"><span style="color:var(--primary);">⭐</span> Minimum Rating</h3>
+      <p style="font-size:0.875rem;color:var(--muted-fg);margin-bottom:1.25rem;">What quality level are you looking for?</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+        <label style="margin:0;">Minimum Rating</label>
+        <span style="display:flex;align-items:center;gap:0.25rem;font-size:1.1rem;font-weight:600;">⭐ <span id="rating-val">3.5</span></span>
+      </div>
+      <input type="range" class="slider" min="1" max="5" step="0.5" value="3.5" oninput="document.getElementById('rating-val').textContent=this.value" />
+      <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--muted-fg);margin-top:0.25rem;"><span>1.0 (Any)</span><span>5.0 (Only the best)</span></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <button class="btn-outline" id="pref-back" onclick="prefBack()" style="gap:0.5rem;" disabled>← Back</button>
+      <button class="btn-primary" id="pref-next" onclick="prefNext()" style="gap:0.5rem;">Next →</button>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== WAITING ROOM ===================== -->
+<div class="page" id="page-waiting">
+  <nav class="nav">
+    <div style="max-width:896px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:64px;">
+      <button class="btn-ghost" onclick="goTo('preferences')">← Edit Preferences</button>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div class="logo-icon-sm"><svg width="16" height="16" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
+        <span style="font-weight:600;">Friday Night Dinner</span>
+      </div>
+      <div></div>
+    </div>
+  </nav>
+  <main style="max-width:640px;margin:0 auto;padding:3rem 1.5rem;text-align:center;">
+    <!-- Animated food spinner -->
+    <div style="position:relative;width:192px;height:192px;margin:0 auto 2rem;">
+      <div id="food-ring" style="position:absolute;inset:0;border-radius:50%;border:1px dashed hsla(16,50%,70%,0.5);animation:spin 8s linear infinite;"></div>
+      <div id="food-icons-container" style="position:absolute;inset:0;"></div>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+        <div style="width:64px;height:64px;border-radius:50%;background:hsla(16,85%,58%,0.1);border:2px solid hsla(16,85%,58%,0.3);display:flex;align-items:center;justify-content:center;font-size:1.5rem;animation:spin 8s linear infinite;">🧑‍🍳</div>
+      </div>
+      <div id="food-items" style="position:absolute;inset:0;pointer-events:none;"></div>
+    </div>
+
+    <p style="font-size:1.05rem;color:var(--muted-fg);font-weight:500;margin-bottom:2rem;" id="waiting-msg">Gathering everyone's cravings...</p>
+
+    <div class="card" style="max-width:320px;margin:0 auto 2rem;padding:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;font-size:0.875rem;font-weight:500;margin-bottom:1rem;">
+        👥 <span>2 of 3 members submitted</span>
+      </div>
+      <div class="progress-bar" style="margin-bottom:1rem;"><div class="progress-fill" style="width:66.6%;"></div></div>
+      <div style="display:flex;justify-content:center;gap:0.5rem;">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">✓</div>
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">✓</div>
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--muted);color:var(--muted-fg);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">?</div>
+      </div>
+    </div>
+
+    <p style="font-size:0.875rem;color:var(--muted-fg);margin-bottom:0.75rem;">Share this code so others can join and submit their preferences</p>
+    <button class="btn-outline" style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;padding:0.75rem 2rem;">📋 #XK8P2Q</button>
+
+    <div style="margin-top:2rem;padding:1.5rem;background:var(--accent);border-radius:9px;max-width:320px;margin-left:auto;margin-right:auto;">
+      <p style="font-size:1.05rem;font-weight:600;color:var(--primary);margin-bottom:1rem;">Everyone's in! Ready to find your restaurant.</p>
+      <button class="btn-primary" style="font-size:1rem;padding:0.75rem 2rem;width:100%;justify-content:center;" onclick="goTo('results')">View Restaurant Matches →</button>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== RESULTS PAGE ===================== -->
+<div class="page" id="page-results">
+  <nav class="nav">
+    <div style="max-width:896px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:64px;">
+      <button class="btn-ghost" onclick="goTo('preferences')">← Preferences</button>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div class="logo-icon-sm"><svg width="16" height="16" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
+        <span style="font-weight:600;">Friday Night Dinner</span>
+      </div>
+      <div></div>
+    </div>
+  </nav>
+  <main style="max-width:896px;margin:0 auto;padding:2rem 1.5rem;">
+    <div style="margin-bottom:1.5rem;">
+      <h1 style="font-family:'Playfair Display',serif;font-size:1.75rem;font-weight:700;margin-bottom:0.4rem;">Your Top Restaurant Matches</h1>
+      <p style="color:var(--muted-fg);">Ranked by how well they match everyone's preferences</p>
+    </div>
+    <div style="display:flex;gap:0.75rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+      <button class="btn-primary" style="flex:1;justify-content:center;" onclick="goTo('vote')">🗳️ Start Group Vote</button>
+      <button class="btn-outline" style="flex:1;justify-content:center;" onclick="goTo('randomizer')">🔀 Random Pick</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <!-- Restaurant 1 -->
+      <div class="restaurant-card top-pick" style="position:relative;">
+        <div style="display:flex;flex-direction:row;">
+          <div style="position:relative;width:192px;height:auto;min-height:140px;background:linear-gradient(135deg,hsla(16,85%,58%,0.2),hsla(45,93%,55%,0.2));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:3rem;">🍝
+            <div style="position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:0.85rem;">⭐</div>
+            <div style="position:absolute;top:12px;left:12px;width:32px;height:32px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;">#1</div>
+          </div>
+          <div style="flex:1;padding:1.25rem;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;margin-bottom:0.75rem;">
+              <div>
+                <h3 style="font-size:1.1rem;font-weight:600;display:flex;align-items:center;gap:0.5rem;">Bella Italia <span class="badge badge-default" style="font-size:0.7rem;">Best Match</span></h3>
+                <p style="font-size:0.875rem;color:var(--muted-fg);">Italian</p>
+              </div>
+              <div style="font-size:1.5rem;font-weight:700;color:#22c55e;">97%<span style="font-size:0.75rem;font-weight:400;color:var(--muted-fg);"> match</span></div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:1rem;font-size:0.875rem;color:var(--muted-fg);margin-bottom:0.75rem;">
+              <span>⭐ <strong style="color:var(--foreground);">4.8</strong> (2.1k reviews)</span>
+              <span>📍 0.8 mi</span>
+              <span>💵 $$</span>
+            </div>
+            <p style="font-size:0.875rem;color:var(--muted-fg);">123 Main St, San Francisco, CA</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Restaurant 2 -->
+      <div class="restaurant-card">
+        <div style="display:flex;flex-direction:row;">
+          <div style="position:relative;width:192px;min-height:130px;background:linear-gradient(135deg,hsla(16,85%,58%,0.2),hsla(45,93%,55%,0.2));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:3rem;">🍣
+            <div style="position:absolute;top:12px;left:12px;width:32px;height:32px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;">#2</div>
+          </div>
+          <div style="flex:1;padding:1.25rem;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;margin-bottom:0.75rem;">
+              <div>
+                <h3 style="font-size:1.1rem;font-weight:600;">Sakura Sushi</h3>
+                <p style="font-size:0.875rem;color:var(--muted-fg);">Japanese</p>
+              </div>
+              <div style="font-size:1.5rem;font-weight:700;color:var(--primary);">84%<span style="font-size:0.75rem;font-weight:400;color:var(--muted-fg);"> match</span></div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:1rem;font-size:0.875rem;color:var(--muted-fg);margin-bottom:0.75rem;">
+              <span>⭐ <strong style="color:var(--foreground);">4.6</strong> (1.4k reviews)</span>
+              <span>📍 1.2 mi</span>
+              <span>💵 $$$</span>
+            </div>
+            <p style="font-size:0.875rem;color:var(--muted-fg);">456 Market St, San Francisco, CA</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Restaurant 3 -->
+      <div class="restaurant-card">
+        <div style="display:flex;flex-direction:row;">
+          <div style="position:relative;width:192px;min-height:130px;background:linear-gradient(135deg,hsla(16,85%,58%,0.2),hsla(45,93%,55%,0.2));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:3rem;">🌮
+            <div style="position:absolute;top:12px;left:12px;width:32px;height:32px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;">#3</div>
+          </div>
+          <div style="flex:1;padding:1.25rem;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;margin-bottom:0.75rem;">
+              <div>
+                <h3 style="font-size:1.1rem;font-weight:600;">Taco Haven</h3>
+                <p style="font-size:0.875rem;color:var(--muted-fg);">Mexican</p>
+              </div>
+              <div style="font-size:1.5rem;font-weight:700;color:#f59e0b;">71%<span style="font-size:0.75rem;font-weight:400;color:var(--muted-fg);"> match</span></div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:1rem;font-size:0.875rem;color:var(--muted-fg);margin-bottom:0.75rem;">
+              <span>⭐ <strong style="color:var(--foreground);">4.5</strong> (890 reviews)</span>
+              <span>📍 0.5 mi</span>
+              <span>💵 $</span>
+            </div>
+            <p style="font-size:0.875rem;color:var(--muted-fg);">789 Mission St, San Francisco, CA</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== VOTE PAGE ===================== -->
+<div class="page" id="page-vote">
+  <nav class="nav">
+    <div style="max-width:896px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:64px;">
+      <button class="btn-ghost" onclick="goTo('results')">← Results</button>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div class="logo-icon-sm"><svg width="16" height="16" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
+        <span style="font-weight:600;">Friday Night Dinner</span>
+      </div>
+      <div></div>
+    </div>
+  </nav>
+  <main style="max-width:896px;margin:0 auto;padding:2rem 1.5rem;">
+    <div style="margin-bottom:1.5rem;">
+      <h1 style="font-family:'Playfair Display',serif;font-size:1.75rem;font-weight:700;margin-bottom:0.4rem;">Vote for Your Favorites</h1>
+      <p style="color:var(--muted-fg);margin-bottom:1rem;">Select the restaurants you'd be happy eating at.</p>
+      <div class="card" style="padding:1rem;background:var(--muted);">
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+          <span style="font-size:0.875rem;font-weight:500;">Voting Progress</span>
+          <span style="font-size:0.875rem;color:var(--muted-fg);">1 of 3 members voted</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:33%;"></div></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.5rem;" id="vote-cards">
+      <div class="vote-card" onclick="toggleVote(this, 0)">
+        <div style="display:flex;align-items:center;">
+          <div style="position:relative;width:96px;height:96px;background:linear-gradient(135deg,hsla(16,85%,58%,0.2),hsla(45,93%,55%,0.2));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:2.5rem;">🍝</div>
+          <div style="flex:1;padding:1rem;">
+            <h3 style="font-weight:600;">Bella Italia ⭐</h3>
+            <p style="font-size:0.875rem;color:var(--muted-fg);">Italian • $$</p>
+            <div style="display:flex;gap:0.75rem;margin-top:0.4rem;font-size:0.8rem;color:var(--muted-fg);">
+              <span>⭐ 4.8</span><span>📍 0.8 mi</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="vote-card selected" onclick="toggleVote(this, 1)" style="box-shadow:0 0 0 2px var(--primary);">
+        <div style="display:flex;align-items:center;">
+          <div style="position:relative;width:96px;height:96px;background:linear-gradient(135deg,hsla(16,85%,58%,0.2),hsla(45,93%,55%,0.2));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:2.5rem;">
+            🍣
+            <div style="position:absolute;inset:0;background:hsla(16,85%,58%,0.2);display:flex;align-items:center;justify-content:center;">
+              <div style="width:40px;height:40px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:white;">✓</div>
+            </div>
+          </div>
+          <div style="flex:1;padding:1rem;">
+            <h3 style="font-weight:600;">Sakura Sushi</h3>
+            <p style="font-size:0.875rem;color:var(--muted-fg);">Japanese • $$$</p>
+            <div style="display:flex;gap:0.75rem;margin-top:0.4rem;font-size:0.8rem;color:var(--muted-fg);">
+              <span>⭐ 4.6</span><span>📍 1.2 mi</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="vote-card" onclick="toggleVote(this, 2)">
+        <div style="display:flex;align-items:center;">
+          <div style="position:relative;width:96px;height:96px;background:linear-gradient(135deg,hsla(16,85%,58%,0.2),hsla(45,93%,55%,0.2));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:2.5rem;">🌮</div>
+          <div style="flex:1;padding:1rem;">
+            <h3 style="font-weight:600;">Taco Haven</h3>
+            <p style="font-size:0.875rem;color:var(--muted-fg);">Mexican • $</p>
+            <div style="display:flex;gap:0.75rem;margin-top:0.4rem;font-size:0.8rem;color:var(--muted-fg);">
+              <span>⭐ 4.5</span><span>📍 0.5 mi</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:0.75rem;">
+      <button class="btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:0.875rem;" onclick="goTo('decision')">
+        👍 Submit 1 Vote
+      </button>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== RANDOMIZER PAGE ===================== -->
+<div class="page" id="page-randomizer">
+  <nav class="nav">
+    <div style="max-width:896px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:64px;">
+      <button class="btn-ghost" onclick="goTo('results')">← Results</button>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div class="logo-icon-sm"><svg width="16" height="16" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
+        <span style="font-weight:600;">Friday Night Dinner</span>
+      </div>
+      <div></div>
+    </div>
+  </nav>
+  <main style="max-width:640px;margin:0 auto;padding:2rem 1.5rem;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <h1 style="font-family:'Playfair Display',serif;font-size:1.75rem;font-weight:700;margin-bottom:0.4rem;">Let Fate Decide!</h1>
+      <p style="color:var(--muted-fg);">Can't choose? Spin the wheel and let destiny pick your dinner.</p>
+    </div>
+
+    <div style="position:relative;height:320px;overflow:hidden;margin-bottom:2rem;" id="spin-container">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,var(--background),transparent 30%,transparent 70%,var(--background));z-index:10;pointer-events:none;"></div>
+      <div style="display:flex;flex-direction:column;gap:0.75rem;padding:1rem 0;" id="spin-list">
+        <div class="restaurant-card" id="rcard-0" style="transition:all 0.15s;">
+          <div style="display:flex;align-items:center;">
+            <div style="width:80px;height:80px;background:linear-gradient(135deg,hsla(16,85%,58%,0.2),hsla(45,93%,55%,0.2));display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;">🍝</div>
+            <div style="flex:1;padding:0.75rem;">
+              <h3 style="font-weight:600;font-size:0.95rem;">Bella Italia</h3>
+              <p style="font-size:0.8rem;color:var(--muted-fg);">Italian • $$ • ⭐ 4.8</p>
+            </div>
+          </div>
+        </div>
+        <div class="restaurant-card" id="rcard-1">
+          <div style="display:flex;align-items:center;">
+            <div style="width:80px;height:80px;background:linear-gradient(135deg,hsla(16,85%,58%,0.2),hsla(45,93%,55%,0.2));display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;">🍣</div>
+            <div style="flex:1;padding:0.75rem;">
+              <h3 style="font-weight:600;font-size:0.95rem;">Sakura Sushi</h3>
+              <p style="font-size:0.8rem;color:var(--muted-fg);">Japanese • $$$ • ⭐ 4.6</p>
+            </div>
+          </div>
+        </div>
+        <div class="restaurant-card" id="rcard-2">
+          <div style="display:flex;align-items:center;">
+            <div style="width:80px;height:80px;background:linear-gradient(135deg,hsla(16,85%,58%,0.2),hsla(45,93%,55%,0.2));display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;">🌮</div>
+            <div style="flex:1;padding:0.75rem;">
+              <h3 style="font-weight:600;font-size:0.95rem;">Taco Haven</h3>
+              <p style="font-size:0.8rem;color:var(--muted-fg);">Mexican • $ • ⭐ 4.5</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="spin-btn-area">
+      <button class="btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:0.875rem;" onclick="doSpin()">🔀 Spin the Wheel!</button>
+    </div>
+
+    <div id="spin-winner" style="display:none;flex-direction:column;gap:0.75rem;">
+      <div class="card" style="padding:1.5rem;text-align:center;background:hsla(16,85%,58%,0.05);border:1px solid hsla(16,85%,58%,0.2);">
+        <div style="font-size:2rem;margin-bottom:0.75rem;">✨</div>
+        <h2 style="font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;margin-bottom:0.25rem;" id="winner-name"></h2>
+        <p style="color:var(--muted-fg);font-size:0.875rem;" id="winner-sub"></p>
+      </div>
+      <div style="display:flex;gap:0.75rem;">
+        <button class="btn-outline" style="flex:1;justify-content:center;" onclick="resetSpin()">🔀 Spin Again</button>
+        <button class="btn-primary" style="flex:1;justify-content:center;" onclick="goTo('decision')">Lock It In!</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== DECISION PAGE ===================== -->
+<div class="page" id="page-decision">
+  <nav class="nav">
+    <div style="max-width:896px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:64px;">
+      <button class="btn-ghost" onclick="goTo('home')">← Home</button>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div class="logo-icon-sm"><svg width="16" height="16" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
+        <span style="font-weight:600;">Friday Night Dinner</span>
+      </div>
+      <div></div>
+    </div>
+  </nav>
+  <main style="max-width:640px;margin:0 auto;padding:2rem 1.5rem;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div style="width:64px;height:64px;border-radius:50%;background:hsla(16,85%,58%,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:2rem;" class="animate-pulse">🎉</div>
+      <h1 style="font-family:'Playfair Display',serif;font-size:1.875rem;font-weight:700;margin-bottom:0.5rem;">It's Decided!</h1>
+      <p style="color:var(--muted-fg);display:flex;align-items:center;justify-content:center;gap:0.5rem;">🗳️ Won by group vote</p>
+    </div>
+
+    <div class="card" style="overflow:hidden;margin-bottom:1.5rem;">
+      <div style="position:relative;width:100%;height:220px;background:linear-gradient(135deg,hsla(16,85%,58%,0.2),hsla(45,93%,55%,0.2));display:flex;align-items:center;justify-content:center;font-size:6rem;">
+        🍣
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,white,transparent);"></div>
+        <div style="position:absolute;top:1rem;right:1rem;width:48px;height:48px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.25rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);">🏆</div>
+      </div>
+      <div style="padding:1.5rem;">
+        <div style="text-align:center;margin-bottom:1.5rem;">
+          <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;margin-bottom:0.75rem;">Sakura Sushi</h2>
+          <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;flex-wrap:wrap;">
+            <span class="badge badge-secondary">Japanese</span>
+            <span class="badge badge-outline">$$$</span>
+            <span style="display:flex;align-items:center;gap:0.25rem;font-weight:500;">⭐ 4.6 <span style="font-weight:400;color:var(--muted-fg);font-size:0.875rem;">(1.4k reviews)</span></span>
+          </div>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin-bottom:1.25rem;" />
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+          <div style="display:flex;align-items:flex-start;gap:0.75rem;">
+            <span style="margin-top:2px;">📍</span>
+            <div>
+              <p style="font-weight:500;">456 Market St, San Francisco, CA</p>
+              <p style="font-size:0.875rem;color:var(--muted-fg);">1.2 miles away</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <span>📞</span>
+            <a href="tel:+14155550102" style="font-weight:500;color:inherit;text-decoration:none;">(415) 555-0102</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:2rem;">
+      <button class="btn-primary" style="justify-content:center;padding:0.875rem;font-size:1rem;">🧭 Get Directions</button>
+      <button class="btn-outline" style="justify-content:center;padding:0.875rem;font-size:1rem;">📤 Share Result</button>
+    </div>
+
+    <div style="padding-top:2rem;border-top:1px solid var(--border);text-align:center;">
+      <p style="color:var(--muted-fg);margin-bottom:1rem;">Ready to start another decision?</p>
+      <button class="btn-outline" onclick="goTo('home')">Start New Group</button>
+    </div>
+  </main>
+</div>
+
+<script>
+  const pages = ['landing','home','preferences','waiting','results','vote','randomizer','decision'];
+  let currentPage = 'landing';
+  let prefStep = 0;
+  const prefSteps = [
+    { label: 'Step 1 of 5', title: 'Cuisine Preferences', progress: 20 },
+    { label: 'Step 2 of 5', title: 'Dietary Restrictions', progress: 40 },
+    { label: 'Step 3 of 5', title: 'Distance & Location',   progress: 60 },
+    { label: 'Step 4 of 5', title: 'Price Range',           progress: 80 },
+    { label: 'Step 5 of 5', title: 'Minimum Rating',        progress: 100 },
+  ];
+
+  function goTo(page) {
+    document.getElementById('page-' + currentPage).classList.remove('active');
+    document.getElementById('page-' + page).classList.add('active');
+    pages.forEach(p => {
+      const el = document.getElementById('nav-' + p);
+      if (el) el.classList.toggle('current', p === page);
+    });
+    currentPage = page;
+    window.scrollTo(0, 0);
+    if (page === 'waiting') startWaitingAnimation();
+    if (page === 'randomizer') resetSpin();
+  }
+
+  function toggleCuisine(el) {
+    el.classList.toggle('selected');
+    if (el.classList.contains('selected')) {
+      if (!el.textContent.startsWith('✓')) el.textContent = '✓ ' + el.textContent;
+    } else {
+      el.textContent = el.textContent.replace(/^✓ /, '');
+    }
+  }
+
+  function togglePrice(el) { el.classList.toggle('selected'); }
+
+  function prefNext() {
+    document.getElementById('pref-step-' + prefStep).style.display = 'none';
+    prefStep = Math.min(prefStep + 1, 4);
+    document.getElementById('pref-step-' + prefStep).style.display = 'block';
+    updatePrefUI();
+    if (prefStep === 4) {
+      document.getElementById('pref-next').textContent = 'Save Preferences';
+      document.getElementById('pref-next').onclick = () => goTo('waiting');
+    }
+  }
+
+  function prefBack() {
+    document.getElementById('pref-step-' + prefStep).style.display = 'none';
+    prefStep = Math.max(prefStep - 1, 0);
+    document.getElementById('pref-step-' + prefStep).style.display = 'block';
+    updatePrefUI();
+    document.getElementById('pref-next').textContent = 'Next →';
+    document.getElementById('pref-next').onclick = prefNext;
+  }
+
+  function updatePrefUI() {
+    document.getElementById('pref-step-label').textContent = prefSteps[prefStep].label;
+    document.getElementById('pref-step-title').textContent = prefSteps[prefStep].title;
+    document.getElementById('pref-progress').style.width = prefSteps[prefStep].progress + '%';
+    document.getElementById('pref-back').disabled = prefStep === 0;
+  }
+
+  // Waiting room animation
+  const foodEmojis = ['🍕','🥪','🥗','🍜','🥩','☕','🍷','🍪','🍦','🎂','🥐','🥤'];
+  let waitMsgIdx = 0;
+  const waitMsgs = ['Gathering everyone\'s cravings...','Mixing up the perfect menu...','Simmering the preferences...','Checking the kitchen...','Tasting the options...','Setting the table...'];
+  let waitInterval;
+
+  function startWaitingAnimation() {
+    const cont = document.getElementById('food-items');
+    if (!cont) return;
+    cont.innerHTML = '';
+    const size = 192;
+    const radius = 76;
+    foodEmojis.forEach((emoji, i) => {
+      const angle = (i * 360 / foodEmojis.length - 90) * Math.PI / 180;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      const span = document.createElement('span');
+      span.textContent = emoji;
+      span.style.cssText = `position:absolute;font-size:1.4rem;left:calc(50% + ${x}px - 14px);top:calc(50% + ${y}px - 14px);transition:all 0.3s;opacity:0.4;`;
+      span.id = 'ficon-' + i;
+      cont.appendChild(span);
+    });
+    let active = 0;
+    clearInterval(waitInterval);
+    waitInterval = setInterval(() => {
+      const prev = document.getElementById('ficon-' + active);
+      active = (active + 1) % foodEmojis.length;
+      const next = document.getElementById('ficon-' + active);
+      if (prev) { prev.style.opacity = '0.4'; prev.style.transform = 'scale(0.85)'; }
+      if (next) { next.style.opacity = '1'; next.style.transform = 'scale(1.5)'; }
+      waitMsgIdx = (waitMsgIdx + 1) % waitMsgs.length;
+      const msgEl = document.getElementById('waiting-msg');
+      if (msgEl) msgEl.textContent = waitMsgs[waitMsgIdx];
+    }, 600);
+  }
+
+  // Vote toggling
+  function toggleVote(card, idx) {
+    card.classList.toggle('selected');
+    const imgDiv = card.querySelector('[style*="flex-shrink"]');
+    if (card.classList.contains('selected')) {
+      card.style.boxShadow = '0 0 0 2px var(--primary)';
+      if (imgDiv) {
+        const overlay = document.createElement('div');
+        overlay.className = 'vote-overlay';
+        overlay.style.cssText = 'position:absolute;inset:0;background:hsla(16,85%,58%,0.2);display:flex;align-items:center;justify-content:center;';
+        overlay.innerHTML = '<div style="width:40px;height:40px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:white;">✓</div>';
+        imgDiv.style.position = 'relative';
+        imgDiv.appendChild(overlay);
+      }
+    } else {
+      card.style.boxShadow = '';
+      const overlay = card.querySelector('.vote-overlay');
+      if (overlay) overlay.remove();
+    }
+    const selected = document.querySelectorAll('#vote-cards .vote-card.selected').length;
+    const btn = document.querySelector('#page-vote .btn-primary');
+    if (btn) btn.textContent = selected > 0 ? `👍 Submit ${selected} Vote${selected > 1 ? 's' : ''}` : '👍 Submit Votes';
+  }
+
+  // Randomizer
+  const restaurants = [
+    { name: 'Bella Italia', sub: 'Italian • $$ • ⭐ 4.8' },
+    { name: 'Sakura Sushi', sub: 'Japanese • $$$ • ⭐ 4.6' },
+    { name: 'Taco Haven', sub: 'Mexican • $ • ⭐ 4.5' },
+  ];
+  let spinInterval2 = null;
+  let isSpinning = false;
+
+  function resetSpin() {
+    if (spinInterval2) clearInterval(spinInterval2);
+    isSpinning = false;
+    ['rcard-0','rcard-1','rcard-2'].forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (el) { el.style.boxShadow = ''; el.style.opacity = '1'; el.style.transform = 'scale(1)'; }
+    });
+    document.getElementById('spin-btn-area').style.display = 'block';
+    document.getElementById('spin-winner').style.display = 'none';
+  }
+
+  function doSpin() {
+    if (isSpinning) return;
+    isSpinning = true;
+    let iter = 0;
+    const maxIter = 25;
+    const winner = Math.floor(Math.random() * 3);
+    let cur = 0;
+    let delay = 80;
+
+    function tick() {
+      ['rcard-0','rcard-1','rcard-2'].forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (i === cur) {
+          el.style.boxShadow = '0 0 0 2px var(--primary)';
+          el.style.opacity = '1';
+          el.style.transform = 'scale(1.03)';
+        } else {
+          el.style.boxShadow = '';
+          el.style.opacity = '0.45';
+          el.style.transform = 'scale(0.97)';
+        }
+      });
+      cur = (cur + 1) % 3;
+      iter++;
+
+      if (iter < maxIter) {
+        if (iter > maxIter - 8) delay = Math.min(delay + 40, 350);
+        spinInterval2 = setTimeout(tick, delay);
+      } else {
+        // Land on winner
+        ['rcard-0','rcard-1','rcard-2'].forEach((id, i) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          if (i === winner) {
+            el.style.boxShadow = '0 0 0 4px var(--primary), 0 4px 16px rgba(0,0,0,0.12)';
+            el.style.opacity = '1';
+            el.style.transform = 'scale(1.05)';
+          } else {
+            el.style.opacity = '0.4';
+            el.style.transform = 'scale(0.95)';
+          }
+        });
+        document.getElementById('winner-name').textContent = restaurants[winner].name + ' ✨';
+        document.getElementById('winner-sub').textContent = restaurants[winner].sub;
+        document.getElementById('spin-btn-area').style.display = 'none';
+        document.getElementById('spin-winner').style.display = 'flex';
+        isSpinning = false;
+      }
+    }
+    tick();
+  }
+</script>
+</body>
+</html>
