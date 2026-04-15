@@ -171,6 +171,8 @@
 <div class="nav-demo-bar">
   <span style="font-weight:600;">TableVote Preview:</span>
   <span class="nav-demo-btn current" id="nav-landing" onclick="goTo('landing')">Landing</span>
+  <span class="nav-demo-btn" id="nav-signup" onclick="goTo('signup')">Sign Up</span>
+  <span class="nav-demo-btn" id="nav-login" onclick="goTo('login')">Login</span>
   <span class="nav-demo-btn" id="nav-home" onclick="goTo('home')">Home</span>
   <span class="nav-demo-btn" id="nav-preferences" onclick="goTo('preferences')">Preferences</span>
   <span class="nav-demo-btn" id="nav-waiting" onclick="goTo('waiting')">Waiting Room</span>
@@ -194,7 +196,10 @@
         <a style="font-size:0.875rem;color:var(--muted-fg);cursor:pointer;">Features</a>
         <a style="font-size:0.875rem;color:var(--muted-fg);cursor:pointer;">How It Works</a>
       </div>
-      <button class="btn-primary" onclick="goTo('home')">Get Started</button>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <button class="btn-outline" style="font-size:0.875rem;padding:0.4rem 1rem;" onclick="goTo('login')">Sign In</button>
+        <button class="btn-primary" onclick="goTo('signup')">Get Started</button>
+      </div>
     </div>
   </nav>
 
@@ -212,10 +217,10 @@
           TableVote combines everyone's food preferences, dietary needs, and location to find the perfect restaurant that makes your whole group happy.
         </p>
         <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
-          <button class="btn-primary" style="font-size:1rem;padding:0.75rem 1.75rem;" onclick="goTo('home')">
+          <button class="btn-primary" style="font-size:1rem;padding:0.75rem 1.75rem;" onclick="goTo('signup')">
             Start a Group <span>→</span>
           </button>
-          <button class="btn-outline" style="font-size:1rem;padding:0.75rem 1.75rem;" onclick="goTo('home')">
+          <button class="btn-outline" style="font-size:1rem;padding:0.75rem 1.75rem;" onclick="goTo('login')">
             Join with Code
           </button>
         </div>
@@ -341,7 +346,7 @@
       <div class="card" style="padding:4rem;text-align:center;background:linear-gradient(135deg,hsla(16,85%,58%,0.05),hsla(25,85%,55%,0.05),hsla(45,93%,55%,0.05));">
         <h2 style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;margin-bottom:1rem;">Ready to End the Debate?</h2>
         <p style="color:var(--muted-fg);margin-bottom:1.75rem;line-height:1.7;">Join thousands of groups who've discovered the easiest way to pick a restaurant together.</p>
-        <button class="btn-primary" style="font-size:1rem;padding:0.75rem 2rem;" onclick="goTo('home')">Get Started Free →</button>
+        <button class="btn-primary" style="font-size:1rem;padding:0.75rem 2rem;" onclick="goTo('signup')">Get Started Free →</button>
       </div>
     </div>
   </section>
@@ -368,16 +373,22 @@
         <div class="logo-icon"><svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
         <span style="font-size:1.2rem;font-weight:700;">TableVote</span>
       </div>
-      <button class="btn-ghost" style="gap:0.5rem;">
-        <span style="width:32px;height:32px;border-radius:50%;background:hsla(16,85%,58%,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--primary);">MJ</span>
-        <span style="font-size:0.875rem;font-weight:500;">Madeline</span>
-        <span>▾</span>
-      </button>
+      <div style="position:relative;">
+        <button class="btn-ghost" style="gap:0.5rem;" onclick="toggleUserMenu()">
+          <span id="user-initials" style="width:32px;height:32px;border-radius:50%;background:hsla(16,85%,58%,0.12);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--primary);">?</span>
+          <span id="user-first-name" style="font-size:0.875rem;font-weight:500;">Account</span>
+          <span>▾</span>
+        </button>
+        <div id="user-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:white;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);min-width:160px;z-index:100;overflow:hidden;">
+          <div id="user-menu-name" style="padding:0.75rem 1rem;font-size:0.875rem;font-weight:600;border-bottom:1px solid var(--border);color:var(--foreground);"></div>
+          <button onclick="logoutUser()" style="width:100%;text-align:left;padding:0.75rem 1rem;font-size:0.875rem;background:none;border:none;cursor:pointer;color:var(--foreground);" onmouseover="this.style.background='var(--muted)'" onmouseout="this.style.background='none'">Sign Out</button>
+        </div>
+      </div>
     </div>
   </nav>
   <main style="max-width:1280px;margin:0 auto;padding:2rem 1.5rem;">
     <div style="margin-bottom:2rem;">
-      <h1 style="font-family:'Playfair Display',serif;font-size:1.875rem;font-weight:700;margin-bottom:0.4rem;">Welcome back, Madeline!</h1>
+      <h1 style="font-family:'Playfair Display',serif;font-size:1.875rem;font-weight:700;margin-bottom:0.4rem;">Welcome back, <span id="welcome-name">there</span>!</h1>
       <p style="color:var(--muted-fg);">Start a new group decision or join an existing one.</p>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:3rem;">
@@ -786,6 +797,79 @@
     <div style="padding-top:2rem;border-top:1px solid var(--border);text-align:center;">
       <p style="color:var(--muted-fg);margin-bottom:1rem;">Ready to start another decision?</p>
       <button class="btn-outline" onclick="goTo('home')">Start New Group</button>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== SIGN UP PAGE ===================== -->
+<div class="page" id="page-signup">
+  <nav class="nav">
+    <div style="max-width:1280px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:64px;">
+      <div style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;" onclick="goTo('landing')">
+        <div class="logo-icon"><svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
+        <span style="font-size:1.2rem;font-weight:700;">TableVote</span>
+      </div>
+      <span style="font-size:0.875rem;color:var(--muted-fg);">Already have an account? <a style="color:var(--primary);cursor:pointer;font-weight:500;" onclick="goTo('login')">Sign in</a></span>
+    </div>
+  </nav>
+  <main style="max-width:440px;margin:0 auto;padding:4rem 1.5rem;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <h1 style="font-family:'Playfair Display',serif;font-size:1.875rem;font-weight:700;margin-bottom:0.5rem;">Create your account</h1>
+      <p style="color:var(--muted-fg);">Join thousands of groups making better dining decisions.</p>
+    </div>
+    <div class="card" style="padding:2rem;">
+      <form onsubmit="handleSignup(event)" style="display:flex;flex-direction:column;gap:1.25rem;">
+        <div>
+          <label for="signup-name">Full Name</label>
+          <input class="input" id="signup-name" type="text" placeholder="Jane Smith" autocomplete="name" required />
+        </div>
+        <div>
+          <label for="signup-email">Email Address</label>
+          <input class="input" id="signup-email" type="email" placeholder="jane@example.com" autocomplete="email" required />
+        </div>
+        <div>
+          <label for="signup-password">Password</label>
+          <input class="input" id="signup-password" type="password" placeholder="At least 8 characters" autocomplete="new-password" required minlength="8" />
+        </div>
+        <div id="signup-error" style="display:none;color:var(--destructive);font-size:0.875rem;padding:0.5rem 0.75rem;background:hsla(0,84%,60%,0.07);border-radius:6px;"></div>
+        <button class="btn-primary" type="submit" id="signup-submit" style="width:100%;justify-content:center;padding:0.75rem;">Create Account →</button>
+      </form>
+    </div>
+    <p style="text-align:center;font-size:0.8rem;color:var(--muted-fg);margin-top:1.25rem;">
+      By creating an account you agree to our Terms of Service.
+    </p>
+  </main>
+</div>
+
+<!-- ===================== LOGIN PAGE ===================== -->
+<div class="page" id="page-login">
+  <nav class="nav">
+    <div style="max-width:1280px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:64px;">
+      <div style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;" onclick="goTo('landing')">
+        <div class="logo-icon"><svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
+        <span style="font-size:1.2rem;font-weight:700;">TableVote</span>
+      </div>
+      <span style="font-size:0.875rem;color:var(--muted-fg);">New to TableVote? <a style="color:var(--primary);cursor:pointer;font-weight:500;" onclick="goTo('signup')">Create an account</a></span>
+    </div>
+  </nav>
+  <main style="max-width:440px;margin:0 auto;padding:4rem 1.5rem;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <h1 style="font-family:'Playfair Display',serif;font-size:1.875rem;font-weight:700;margin-bottom:0.5rem;">Sign in to TableVote</h1>
+      <p style="color:var(--muted-fg);">Welcome back! Let's find a great place to eat.</p>
+    </div>
+    <div class="card" style="padding:2rem;">
+      <form onsubmit="handleLogin(event)" style="display:flex;flex-direction:column;gap:1.25rem;">
+        <div>
+          <label for="login-email">Email Address</label>
+          <input class="input" id="login-email" type="email" placeholder="jane@example.com" autocomplete="email" required />
+        </div>
+        <div>
+          <label for="login-password">Password</label>
+          <input class="input" id="login-password" type="password" placeholder="Your password" autocomplete="current-password" required />
+        </div>
+        <div id="login-error" style="display:none;color:var(--destructive);font-size:0.875rem;padding:0.5rem 0.75rem;background:hsla(0,84%,60%,0.07);border-radius:6px;"></div>
+        <button class="btn-primary" type="submit" id="login-submit" style="width:100%;justify-content:center;padding:0.75rem;">Sign In →</button>
+      </form>
     </div>
   </main>
 </div>
@@ -1325,8 +1409,150 @@
     );
   }
 
-  const pages = ['landing','home','preferences','waiting','results','vote','randomizer','decision'];
-  let currentPage = 'landing';
+  // ── Auth ───────────────────────────────────────────────────────────────────
+  const PROTECTED_PAGES = ['home','preferences','waiting','results','vote','randomizer','decision'];
+  let currentUser = null;
+
+  async function hashPassword(password) {
+    const data = new TextEncoder().encode(password);
+    const buf  = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  async function handleSignup(e) {
+    e.preventDefault();
+    const name     = document.getElementById('signup-name').value.trim();
+    const email    = document.getElementById('signup-email').value.trim().toLowerCase();
+    const password = document.getElementById('signup-password').value;
+    const errorEl  = document.getElementById('signup-error');
+    const btn      = document.getElementById('signup-submit');
+    errorEl.style.display = 'none';
+    btn.disabled = true; btn.textContent = 'Creating account…';
+
+    if (password.length < 8) {
+      errorEl.textContent = 'Password must be at least 8 characters.';
+      errorEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Create Account →';
+      return;
+    }
+
+    const users = JSON.parse(localStorage.getItem('tv_users') || '[]');
+    if (users.find(u => u.email === email)) {
+      errorEl.textContent = 'An account with this email already exists.';
+      errorEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Create Account →';
+      return;
+    }
+
+    const passwordHash = await hashPassword(password);
+    users.push({ name, email, passwordHash });
+    localStorage.setItem('tv_users', JSON.stringify(users));
+    currentUser = { name, email };
+    localStorage.setItem('tv_current_user', JSON.stringify(currentUser));
+
+    // Clear form
+    document.getElementById('signup-name').value = '';
+    document.getElementById('signup-email').value = '';
+    document.getElementById('signup-password').value = '';
+    btn.disabled = false; btn.textContent = 'Create Account →';
+
+    updateUserDisplay();
+    goTo('home');
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const email    = document.getElementById('login-email').value.trim().toLowerCase();
+    const password = document.getElementById('login-password').value;
+    const errorEl  = document.getElementById('login-error');
+    const btn      = document.getElementById('login-submit');
+    errorEl.style.display = 'none';
+    btn.disabled = true; btn.textContent = 'Signing in…';
+
+    const users = JSON.parse(localStorage.getItem('tv_users') || '[]');
+    const user  = users.find(u => u.email === email);
+    if (!user) {
+      errorEl.textContent = 'No account found with this email.';
+      errorEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Sign In →';
+      return;
+    }
+
+    const passwordHash = await hashPassword(password);
+    if (passwordHash !== user.passwordHash) {
+      errorEl.textContent = 'Incorrect password.';
+      errorEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Sign In →';
+      return;
+    }
+
+    currentUser = { name: user.name, email: user.email };
+    localStorage.setItem('tv_current_user', JSON.stringify(currentUser));
+
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-password').value = '';
+    btn.disabled = false; btn.textContent = 'Sign In →';
+
+    updateUserDisplay();
+    goTo('home');
+  }
+
+  function logoutUser() {
+    currentUser = null;
+    localStorage.removeItem('tv_current_user');
+    closeUserMenu();
+    goTo('landing');
+  }
+
+  function updateUserDisplay() {
+    if (!currentUser) return;
+    const initials  = currentUser.name.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const firstName = currentUser.name.split(/\s+/)[0];
+    const initEl  = document.getElementById('user-initials');
+    const nameEl  = document.getElementById('user-first-name');
+    const menuEl  = document.getElementById('user-menu-name');
+    const wlcmEl  = document.getElementById('welcome-name');
+    if (initEl)  initEl.textContent  = initials;
+    if (nameEl)  nameEl.textContent  = firstName;
+    if (menuEl)  menuEl.textContent  = currentUser.name;
+    if (wlcmEl)  wlcmEl.textContent  = firstName;
+  }
+
+  function toggleUserMenu() {
+    const menu = document.getElementById('user-menu');
+    if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function closeUserMenu() {
+    const menu = document.getElementById('user-menu');
+    if (menu) menu.style.display = 'none';
+  }
+
+  // Close user menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#page-home [style*="position:relative"]')) closeUserMenu();
+  });
+
+  // Restore session from localStorage on load
+  (function restoreSession() {
+    const saved = localStorage.getItem('tv_current_user');
+    if (saved) {
+      try { currentUser = JSON.parse(saved); } catch { currentUser = null; }
+    }
+  })();
+
+  const pages = ['landing','signup','login','home','preferences','waiting','results','vote','randomizer','decision'];
+  // If already logged in, start on home; otherwise start on landing
+  let currentPage = currentUser ? 'home' : 'landing';
+  if (currentUser) {
+    document.getElementById('page-landing').classList.remove('active');
+    document.getElementById('page-home').classList.add('active');
+    pages.forEach(p => {
+      const el = document.getElementById('nav-' + p);
+      if (el) el.classList.toggle('current', p === 'home');
+    });
+    updateUserDisplay();
+  }
   updateMemberDisplays(); // initialize all count displays
   let prefStep = 0;
   const prefSteps = [
@@ -1338,6 +1564,14 @@
   ];
 
   function goTo(page) {
+    // Redirect unauthenticated users away from protected pages
+    if (PROTECTED_PAGES.includes(page) && !currentUser) {
+      page = 'login';
+    }
+    // Redirect already-logged-in users away from auth pages
+    if ((page === 'login' || page === 'signup') && currentUser) {
+      page = 'home';
+    }
     document.getElementById('page-' + currentPage).classList.remove('active');
     document.getElementById('page-' + page).classList.add('active');
     pages.forEach(p => {
@@ -1346,6 +1580,7 @@
     });
     currentPage = page;
     window.scrollTo(0, 0);
+    if (page === 'home') updateUserDisplay();
     if (page === 'waiting') {
       // You submitted your preferences — count yourself
       if (group.submittedCount < group.memberCount) {
