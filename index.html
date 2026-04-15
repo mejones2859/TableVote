@@ -1413,12 +1413,6 @@
   const PROTECTED_PAGES = ['home','preferences','waiting','results','vote','randomizer','decision'];
   let currentUser = null;
 
-  async function hashPassword(password) {
-    const data = new TextEncoder().encode(password);
-    const buf  = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-  }
-
   async function handleSignup(e) {
     e.preventDefault();
     const name     = document.getElementById('signup-name').value.trim();
@@ -1429,35 +1423,31 @@
     errorEl.style.display = 'none';
     btn.disabled = true; btn.textContent = 'Creating account…';
 
-    if (password.length < 8) {
-      errorEl.textContent = 'Password must be at least 8 characters.';
+    try {
+      const res  = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        errorEl.textContent = data.error || 'Something went wrong. Please try again.';
+        errorEl.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Create Account →';
+        return;
+      }
+      currentUser = data.user;
+      document.getElementById('signup-name').value    = '';
+      document.getElementById('signup-email').value   = '';
+      document.getElementById('signup-password').value = '';
+      btn.disabled = false; btn.textContent = 'Create Account →';
+      updateUserDisplay();
+      goTo('home');
+    } catch (err) {
+      errorEl.textContent = 'Network error. Please try again.';
       errorEl.style.display = 'block';
       btn.disabled = false; btn.textContent = 'Create Account →';
-      return;
     }
-
-    const users = JSON.parse(localStorage.getItem('tv_users') || '[]');
-    if (users.find(u => u.email === email)) {
-      errorEl.textContent = 'An account with this email already exists.';
-      errorEl.style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Create Account →';
-      return;
-    }
-
-    const passwordHash = await hashPassword(password);
-    users.push({ name, email, passwordHash });
-    localStorage.setItem('tv_users', JSON.stringify(users));
-    currentUser = { name, email };
-    localStorage.setItem('tv_current_user', JSON.stringify(currentUser));
-
-    // Clear form
-    document.getElementById('signup-name').value = '';
-    document.getElementById('signup-email').value = '';
-    document.getElementById('signup-password').value = '';
-    btn.disabled = false; btn.textContent = 'Create Account →';
-
-    updateUserDisplay();
-    goTo('home');
   }
 
   async function handleLogin(e) {
@@ -1469,37 +1459,35 @@
     errorEl.style.display = 'none';
     btn.disabled = true; btn.textContent = 'Signing in…';
 
-    const users = JSON.parse(localStorage.getItem('tv_users') || '[]');
-    const user  = users.find(u => u.email === email);
-    if (!user) {
-      errorEl.textContent = 'No account found with this email.';
+    try {
+      const res  = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        errorEl.textContent = data.error || 'Something went wrong. Please try again.';
+        errorEl.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Sign In →';
+        return;
+      }
+      currentUser = data.user;
+      document.getElementById('login-email').value    = '';
+      document.getElementById('login-password').value = '';
+      btn.disabled = false; btn.textContent = 'Sign In →';
+      updateUserDisplay();
+      goTo('home');
+    } catch (err) {
+      errorEl.textContent = 'Network error. Please try again.';
       errorEl.style.display = 'block';
       btn.disabled = false; btn.textContent = 'Sign In →';
-      return;
     }
-
-    const passwordHash = await hashPassword(password);
-    if (passwordHash !== user.passwordHash) {
-      errorEl.textContent = 'Incorrect password.';
-      errorEl.style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Sign In →';
-      return;
-    }
-
-    currentUser = { name: user.name, email: user.email };
-    localStorage.setItem('tv_current_user', JSON.stringify(currentUser));
-
-    document.getElementById('login-email').value = '';
-    document.getElementById('login-password').value = '';
-    btn.disabled = false; btn.textContent = 'Sign In →';
-
-    updateUserDisplay();
-    goTo('home');
   }
 
-  function logoutUser() {
+  async function logoutUser() {
+    await fetch('/api/auth/logout', { method: 'POST' });
     currentUser = null;
-    localStorage.removeItem('tv_current_user');
     closeUserMenu();
     goTo('landing');
   }
@@ -1533,27 +1521,30 @@
     if (!e.target.closest('#page-home [style*="position:relative"]')) closeUserMenu();
   });
 
-  // Restore session from localStorage on load
-  (function restoreSession() {
-    const saved = localStorage.getItem('tv_current_user');
-    if (saved) {
-      try { currentUser = JSON.parse(saved); } catch { currentUser = null; }
+  const pages = ['landing','signup','login','home','preferences','waiting','results','vote','randomizer','decision'];
+  let currentPage = 'landing';
+  updateMemberDisplays(); // initialize all count displays
+
+  // Restore session from server on load
+  (async function restoreSession() {
+    try {
+      const res  = await fetch('/api/auth/me');
+      const data = await res.json();
+      if (data.user) {
+        currentUser = data.user;
+        document.getElementById('page-landing').classList.remove('active');
+        document.getElementById('page-home').classList.add('active');
+        pages.forEach(p => {
+          const el = document.getElementById('nav-' + p);
+          if (el) el.classList.toggle('current', p === 'home');
+        });
+        currentPage = 'home';
+        updateUserDisplay();
+      }
+    } catch (e) {
+      // No active session — stay on landing page
     }
   })();
-
-  const pages = ['landing','signup','login','home','preferences','waiting','results','vote','randomizer','decision'];
-  // If already logged in, start on home; otherwise start on landing
-  let currentPage = currentUser ? 'home' : 'landing';
-  if (currentUser) {
-    document.getElementById('page-landing').classList.remove('active');
-    document.getElementById('page-home').classList.add('active');
-    pages.forEach(p => {
-      const el = document.getElementById('nav-' + p);
-      if (el) el.classList.toggle('current', p === 'home');
-    });
-    updateUserDisplay();
-  }
-  updateMemberDisplays(); // initialize all count displays
   let prefStep = 0;
   const prefSteps = [
     { label: 'Step 1 of 5', title: 'Cuisine Preferences', progress: 20 },
