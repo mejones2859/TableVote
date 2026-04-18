@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TableVote – Group Restaurant Decision App</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <script>
     tailwind.config = {
@@ -457,7 +458,10 @@
           <h2 style="font-size:1.15rem;font-weight:600;margin-bottom:0.25rem;">Sign-Up Data</h2>
           <p style="font-size:0.875rem;color:var(--muted-fg);">Download all registered accounts as a CSV file.</p>
         </div>
-        <button class="btn-outline" onclick="downloadSignupsCSV()" style="display:flex;align-items:center;gap:0.5rem;">⬇ Export Signups CSV</button>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <button class="btn-primary" onclick="exportSignupsExcel()" style="display:flex;align-items:center;gap:0.5rem;">⬇ Excel (.xlsx)</button>
+          <button class="btn-outline" onclick="exportSignupsGoogleSheets()" style="display:flex;align-items:center;gap:0.5rem;">📊 Google Sheets</button>
+        </div>
       </div>
     </div>
   </main>
@@ -1751,20 +1755,43 @@
   }
 
   // ── CSV export ─────────────────────────────────────────────────────────────
-  function downloadSignupsCSV() {
-    if (!currentUser || currentUser.email !== ADMIN_EMAIL) return;
+  function getSignupRows() {
     const users = JSON.parse(localStorage.getItem('tv_users') || '[]');
-    if (users.length === 0) { alert('No signups yet.'); return; }
-    const rows = [['Name', 'Email']];
-    users.forEach(u => rows.push([`"${u.name.replace(/"/g, '""')}"`, `"${u.email.replace(/"/g, '""')}"`]));
-    const csv     = rows.map(r => r.join(',')).join('\n');
-    const blob    = new Blob([csv], { type: 'text/csv' });
-    const url     = URL.createObjectURL(blob);
-    const a       = document.createElement('a');
-    a.href        = url;
-    a.download    = 'tablevote-signups.csv';
+    return [['Name', 'Email'], ...users.map(u => [u.name, u.email])];
+  }
+
+  function exportSignupsExcel() {
+    if (!currentUser || currentUser.email !== ADMIN_EMAIL) return;
+    const rows = getSignupRows();
+    if (rows.length <= 1) { alert('No signups yet.'); return; }
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    // Bold the header row
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const cell = ws[XLSX.utils.encode_cell({ r: 0, c })];
+      if (cell) cell.s = { font: { bold: true } };
+    }
+    ws['!cols'] = [{ wch: 30 }, { wch: 40 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Signups');
+    XLSX.writeFile(wb, 'tablevote-signups.xlsx');
+  }
+
+  function exportSignupsGoogleSheets() {
+    if (!currentUser || currentUser.email !== ADMIN_EMAIL) return;
+    const rows = getSignupRows();
+    if (rows.length <= 1) { alert('No signups yet.'); return; }
+    // Download CSV
+    const csv  = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'tablevote-signups.csv';
     a.click();
     URL.revokeObjectURL(url);
+    // Open a new Google Sheet after a short delay so the download starts first
+    setTimeout(() => window.open('https://sheets.new', '_blank'), 600);
   }
 
   const pages = ['landing','signup','login','home','preferences','waiting','results','vote','randomizer','decision','restaurant'];
